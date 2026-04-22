@@ -1,8 +1,18 @@
 from fastapi import APIRouter, Query
 
+from app.services.recommend_service import get_home_recommendations
 from app.services.similarity_service import get_similar_games
 
 router = APIRouter(prefix="/recommend", tags=["recommend"])
+
+
+@router.get("/home")
+def recommend_home_games(
+    user_id: str = Query(default="demo_user"),
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+):
+    return get_home_recommendations(user_id=user_id, limit=limit, offset=offset)
 
 
 @router.get("/similar/{game_id}")
