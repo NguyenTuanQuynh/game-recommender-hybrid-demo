@@ -50,7 +50,7 @@ export default function DetailPage() {
 
   return (
     <div className="page">
-      <div className="detail-layout">
+      <div className="detail-layout refined-detail">
         <div
           className="detail-poster"
           style={{ backgroundColor: game.ui_color || "#2d3748" }}
@@ -60,20 +60,35 @@ export default function DetailPage() {
           </div>
         </div>
 
-        <div className="detail-info">
+        <div className="detail-info refined-detail-info">
+          <div className="detail-id">{game.game_id}</div>
           <h1>{game.title}</h1>
-          <p><strong>Game ID:</strong> {game.game_id}</p>
-          <p><strong>Categories:</strong> {game.categories_text || "N/A"}</p>
-          <p><strong>Brand:</strong> {game.brand || "N/A"}</p>
-          <p><strong>Price:</strong> {game.price ?? "N/A"}</p>
-          <p><strong>Average Rating:</strong> {game.avg_rating ?? "N/A"}</p>
-          <p><strong>Rating Count:</strong> {game.rating_count ?? "N/A"}</p>
-          <p><strong>Description:</strong> {game.description || "No description"}</p>
+
+          <div className="detail-meta">
+            {game.categories_text ? (
+              <span className="meta-pill">{game.categories_text}</span>
+            ) : null}
+            {game.brand ? <span className="meta-pill">{game.brand}</span> : null}
+            {game.avg_rating !== null && game.avg_rating !== undefined ? (
+              <span className="meta-pill">★ {Number(game.avg_rating).toFixed(1)}</span>
+            ) : null}
+            {game.price !== null && game.price !== undefined ? (
+              <span className="meta-pill">${Number(game.price).toFixed(2)}</span>
+            ) : null}
+          </div>
+
+          <p className="detail-description">
+            {game.description || "No description available."}
+          </p>
+
+          <p className="muted-text">
+            Rating count: {game.rating_count ?? "N/A"}
+          </p>
         </div>
       </div>
 
       <GameRow
-        title="Similar Games"
+        title="More Like This"
         games={similar?.items || []}
         source="similar"
       />

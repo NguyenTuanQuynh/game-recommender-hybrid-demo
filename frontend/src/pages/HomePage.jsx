@@ -1,11 +1,17 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import GameRow from "../components/GameRow";
 import Loading from "../components/Loading";
-import { getGames, getHomeRecommendations } from "../api/client";
+import {
+  getGames,
+  getHomeRecommendations,
+  getRecentlyWatched,
+} from "../api/client";
 import { safeLogEvent } from "../utils/tracking";
 
 export default function HomePage() {
   const [recommendData, setRecommendData] = useState(null);
+  const [recentData, setRecentData] = useState(null);
   const [popularData, setPopularData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -23,12 +29,14 @@ export default function HomePage() {
           metadata: { page: "home" },
         });
 
-        const [recommendRes, popularRes] = await Promise.all([
-          getHomeRecommendations("demo_user", 12, 0),
-          getGames(12, 0),
+        const [recommendRes, recentRes, popularRes] = await Promise.all([
+          getHomeRecommendations("demo_user", 10, 0),
+          getRecentlyWatched("demo_user", 10, 0),
+          getGames(10, 0),
         ]);
 
         setRecommendData(recommendRes);
+        setRecentData(recentRes);
         setPopularData(popularRes);
       } catch (err) {
         setError(err.message || "Failed to load homepage.");
@@ -45,28 +53,40 @@ export default function HomePage() {
 
   return (
     <div className="page">
-      <div className="hero-banner">
-        <h1>Hybrid Game Recommender</h1>
-        <p>
-          Demo homepage with personalized recommendations, popular games, search,
-          and similar-item recommendation.
-        </p>
+      <div className="hero-banner compact-hero">
+        <div className="hero-content">
+          <div>
+            <h1>Hybrid Game Recommender</h1>
+            <p className="hero-subtext">
+              Personalized homepage, search, similar-item recommendation, and live behavior logging.
+            </p>
+          </div>
 
-        <div className="hero-meta">
-          <span className="strategy-pill">
-            Strategy: {recommendData?.strategy || "unknown"}
-          </span>
-          <span className="tip-text">
-            Tip: click a few games, search, then come back home to see the recommendations change.
-          </span>
+          <div className="hero-actions">
+            <span className="strategy-pill">
+              Strategy: {recommendData?.strategy || "unknown"}
+            </span>
+
+            <Link to="/library" className="ghost-button">
+              Open Library
+            </Link>
+          </div>
         </div>
       </div>
 
       <GameRow
-        title={`Recommended For You (${recommendData?.strategy || "unknown"})`}
+        title="Recommended For You"
         games={recommendData?.items || []}
         source="home"
       />
+
+      {recentData?.items?.length > 0 ? (
+        <GameRow
+          title="Just Watched"
+          games={recentData?.items || []}
+          source="recent"
+        />
+      ) : null}
 
       <GameRow
         title="Popular Games"

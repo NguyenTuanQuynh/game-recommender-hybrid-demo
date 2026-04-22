@@ -1,7 +1,6 @@
 from functools import lru_cache
 from typing import Dict, Set
 
-import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -19,7 +18,6 @@ HOME_RESULT_COLUMNS = [
     "display_label",
     "ui_color",
 ]
-
 
 EVENT_WEIGHTS = {
     "click_poster": 1.0,
@@ -79,8 +77,7 @@ def _get_user_game_events(user_id: str) -> pd.DataFrame:
     if "game_id" not in events.columns:
         return pd.DataFrame()
 
-    events = events[events["game_id"].notna()].copy()
-    events["game_id"] = events["game_id"].astype(str).str.strip()
+    events["game_id"] = events["game_id"].fillna("").astype(str).str.strip()
     events = events[events["game_id"] != ""].copy()
 
     if events.empty:
@@ -98,8 +95,8 @@ def _get_user_game_events(user_id: str) -> pd.DataFrame:
     else:
         events["event_value"] = 1.0
 
-    # final weight = base_weight * event_value
     events["final_weight"] = events["base_weight"] * events["event_value"]
+    events["_ts"] = pd.to_datetime(events["timestamp"], errors="coerce")
 
     return events
 
@@ -135,13 +132,11 @@ def get_home_recommendations(user_id: str = "demo_user", limit: int = 20, offset
     if user_events.empty:
         return _popular_fallback(df=df, limit=limit, offset=offset, user_id=user_id)
 
-    # chỉ giữ các game_id thực sự tồn tại trong games.csv
     user_events = user_events[user_events["game_id"].isin(game_id_to_index.keys())].copy()
 
     if user_events.empty:
         return _popular_fallback(df=df, limit=limit, offset=offset, user_id=user_id)
 
-    # gộp trọng số theo game
     user_game_weights = (
         user_events.groupby("game_id", as_index=False)["final_weight"]
         .sum()
@@ -150,7 +145,6 @@ def get_home_recommendations(user_id: str = "demo_user", limit: int = 20, offset
 
     interacted_game_ids: Set[str] = set(user_game_weights["game_id"].tolist())
 
-    # tạo user profile vector = weighted sum các vector game đã tương tác
     weighted_vector = None
     total_weight = 0.0
 
@@ -172,7 +166,6 @@ def get_home_recommendations(user_id: str = "demo_user", limit: int = 20, offset
         return _popular_fallback(df=df, limit=limit, offset=offset, user_id=user_id)
 
     user_profile_vector = weighted_vector / total_weight
-
     profile_scores = cosine_similarity(user_profile_vector, tfidf_matrix).flatten()
 
     candidates = df.copy()
@@ -182,7 +175,6 @@ def get_home_recommendations(user_id: str = "demo_user", limit: int = 20, offset
         + 0.2 * candidates["popularity_score"]
     )
 
-    # loại game user đã tương tác rồi
     candidates = candidates[~candidates["game_id"].isin(interacted_game_ids)].copy()
 
     if candidates.empty:
@@ -203,6 +195,58 @@ def get_home_recommendations(user_id: str = "demo_user", limit: int = 20, offset
     return {
         "user_id": user_id,
         "strategy": "personalized_home",
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "items": items,
+    }
+
+
+def get_recently_watched(user_id: str = "demo_user", limit: int = 10, offset: int = 0) -> dict:
+    df, _, game_id_to_index = _build_home_assets()
+
+    user_events = _get_user_game_events(user_id=user_id)
+
+    if user_events.empty:
+        return {
+            "user_id": user_id,
+            "strategy": "recently_watched",
+            "total": 0,
+            "limit": limit,
+            "offset": offset,
+            "items": [],
+        }
+
+    user_events = user_events[user_events["game_id"].isin(game_id_to_index.keys())].copy()
+
+    if user_events.empty:
+        return {
+            "user_id": user_id,
+            "strategy": "recently_watched",
+            "total": 0,
+            "limit": limit,
+            "offset": offset,
+            "items": [],
+        }
+
+    user_events = user_events.sort_values("_ts", ascending=False)
+    recent_game_ids = (
+        user_events.drop_duplicates(subset=["game_id"], keep="first")["game_id"].tolist()
+    )
+
+    recent_df = df[df["game_id"].isin(recent_game_ids)].copy()
+    order_map = {gid: idx for idx, gid in enumerate(recent_game_ids)}
+    recent_df["recent_order"] = recent_df["game_id"].map(order_map)
+    recent_df = recent_df.sort_values("recent_order", ascending=True)
+
+    total = len(recent_df)
+    page_df = recent_df.iloc[offset: offset + limit][HOME_RESULT_COLUMNS].copy()
+
+    items = [_clean_record(row) for row in page_df.to_dict(orient="records")]
+
+    return {
+        "user_id": user_id,
+        "strategy": "recently_watched",
         "total": total,
         "limit": limit,
         "offset": offset,

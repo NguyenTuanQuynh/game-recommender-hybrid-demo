@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import GameRow from "../components/GameRow";
+import GameGrid from "../components/GameGrid";
 import Loading from "../components/Loading";
 import { searchGames } from "../api/client";
 import { safeLogEvent } from "../utils/tracking";
@@ -50,16 +50,14 @@ export default function SearchPage() {
 
   return (
     <div className="page">
-      <div className="page-header">
+      <div className="page-header compact-header">
         <h1>Search Results</h1>
-        <p>
-          Query: <strong>{data?.query || query || "(empty)"}</strong>
+        <p className="muted-text">
+          Query: <strong>{data?.query || query || "(empty)"}</strong> · Results: {data?.total || 0}
         </p>
-        <p>Total results: {data?.total || 0}</p>
       </div>
 
-      <GameRow
-        title="Matched Games"
+      <GameGrid
         games={data?.items || []}
         source="search"
         query={query}

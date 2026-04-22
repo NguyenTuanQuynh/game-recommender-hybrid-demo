@@ -30,6 +30,12 @@ export async function getHomeRecommendations(userId = "demo_user", limit = 12, o
   );
 }
 
+export async function getRecentlyWatched(userId = "demo_user", limit = 10, offset = 0) {
+  return fetchJSON(
+    `${API_BASE_URL}/recommend/recent?user_id=${encodeURIComponent(userId)}&limit=${limit}&offset=${offset}`
+  );
+}
+
 export async function getSimilarGames(gameId, limit = 10, offset = 0) {
   return fetchJSON(
     `${API_BASE_URL}/recommend/similar/${gameId}?limit=${limit}&offset=${offset}`
