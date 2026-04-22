@@ -28,6 +28,19 @@ def load_interactions_df() -> pd.DataFrame:
 
 @lru_cache(maxsize=1)
 def load_event_logs_df() -> pd.DataFrame:
+    if not EVENT_LOGS_CSV_PATH.exists():
+        return pd.DataFrame(columns=[
+            "event_id",
+            "user_id",
+            "game_id",
+            "event_type",
+            "event_value",
+            "query",
+            "source",
+            "timestamp",
+            "session_id",
+            "metadata",
+        ])
     return _read_csv(EVENT_LOGS_CSV_PATH)
 
 
