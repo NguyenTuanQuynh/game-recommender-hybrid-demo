@@ -1,6 +1,6 @@
 import GameCard from "./GameCard";
 
-export default function GameRow({ title, games = [] }) {
+export default function GameRow({ title, games = [], source = "home", query = null }) {
   return (
     <section className="game-row-section">
       <h2 className="section-title">{title}</h2>
@@ -10,7 +10,12 @@ export default function GameRow({ title, games = [] }) {
       ) : (
         <div className="game-row">
           {games.map((game) => (
-            <GameCard key={game.game_id} game={game} />
+            <GameCard
+              key={game.game_id}
+              game={game}
+              source={source}
+              query={query}
+            />
           ))}
         </div>
       )}

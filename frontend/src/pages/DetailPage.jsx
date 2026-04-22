@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import GameRow from "../components/GameRow";
 import Loading from "../components/Loading";
 import { getGameDetail, getSimilarGames } from "../api/client";
+import { safeLogEvent } from "../utils/tracking";
 
 export default function DetailPage() {
   const { gameId } = useParams();
@@ -25,6 +26,14 @@ export default function DetailPage() {
 
         setGame(gameRes);
         setSimilar(similarRes);
+
+        safeLogEvent({
+          event_type: "view_detail",
+          game_id: gameId,
+          event_value: 2.0,
+          source: "detail",
+          metadata: { page: "detail" },
+        });
       } catch (err) {
         setError(err.message || "Failed to load detail page.");
       } finally {
@@ -66,6 +75,7 @@ export default function DetailPage() {
       <GameRow
         title="Similar Games"
         games={similar?.items || []}
+        source="similar"
       />
     </div>
   );

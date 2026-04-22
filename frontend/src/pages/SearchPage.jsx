@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import GameRow from "../components/GameRow";
 import Loading from "../components/Loading";
 import { searchGames } from "../api/client";
+import { safeLogEvent } from "../utils/tracking";
 
 export default function SearchPage() {
   const location = useLocation();
@@ -23,6 +24,14 @@ export default function SearchPage() {
       try {
         setLoading(true);
         setError("");
+
+        safeLogEvent({
+          event_type: "search",
+          event_value: 0.5,
+          query,
+          source: "search",
+          metadata: { page: "search" },
+        });
 
         const result = await searchGames(query, 20, 0);
         setData(result);
@@ -52,6 +61,8 @@ export default function SearchPage() {
       <GameRow
         title="Matched Games"
         games={data?.items || []}
+        source="search"
+        query={query}
       />
     </div>
   );

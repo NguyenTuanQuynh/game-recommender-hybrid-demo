@@ -29,6 +29,7 @@ a {
   padding: 16px 24px;
   background: rgba(15, 23, 42, 0.95);
   border-bottom: 1px solid #1e293b;
+  backdrop-filter: blur(8px);
 }
 
 .brand {
@@ -57,6 +58,28 @@ a {
 .hero-banner h1,
 .page-header h1 {
   margin: 0 0 8px;
+}
+
+.hero-meta {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.strategy-pill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.tip-text {
+  font-size: 14px;
+  opacity: 0.95;
 }
 
 .search-form {
@@ -105,6 +128,19 @@ a {
   gap: 16px;
   overflow-x: auto;
   padding-bottom: 6px;
+}
+
+.game-row::-webkit-scrollbar {
+  height: 10px;
+}
+
+.game-row::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 999px;
+}
+
+.game-row::-webkit-scrollbar-track {
+  background: #0b1220;
 }
 
 .game-card-link {
